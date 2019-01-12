@@ -22,22 +22,16 @@ class Oscillator
     void attach(int pin, bool rev =false);
     void detach();
     
-    void SetA(unsigned int A) {_A=A;};
-    void SetO(unsigned int O) {_O=O;};
-    void SetPh(double Ph) {_phase0=Ph;};
-    void SetT(unsigned int T);
-    void SetTrim(int trim){_trim=trim;};
-    int getTrim() {return _trim;};
-    void SetPosition(int position); 
-    void Stop() {_stop=true;};
-    void Play() {_stop=false;};
-    void Reset() {_phase=0;};
+    void setA(unsigned int A) {_A=A;};
+    void setO(unsigned int O) {_O=O;};
+    void setPh(double Ph) {_phase0=Ph;};
+    void setT(unsigned int T);
+    void setPosition(int position); 
     void refresh();
     
   private:
     bool next_sample();  
-    
-  private:
+
     //-- Servo that is attached to the oscillator
     Servo _servo;
     

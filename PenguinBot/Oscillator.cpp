@@ -12,7 +12,6 @@
 #include <pins_arduino.h>
 #endif
 #include "Oscillator.h"
-#include <Servo.h>
 
 //-- This function returns true if another sample
 //-- should be taken (i.e. the TS time has passed since
@@ -73,7 +72,7 @@ void Oscillator::detach() {
 /*************************************/
 /* Set the oscillator period, in ms  */
 /*************************************/
-void Oscillator::SetT(unsigned int T) {
+void Oscillator::setT(unsigned int T) {
   //-- Assign the new period
   _T = T;
 
@@ -86,7 +85,7 @@ void Oscillator::SetT(unsigned int T) {
 /* Manual set of the position  */
 /******************************/
 
-void Oscillator::SetPosition(int position) { _servo.write(position + _trim); };
+void Oscillator::setPosition(int position) { _servo.write(position + _trim); };
 
 /*******************************************************************/
 /* This function should be periodically called                     */

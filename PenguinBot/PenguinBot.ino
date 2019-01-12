@@ -2,7 +2,7 @@
 #include "Oscillator.h"
 #include "NeoSWSerial.h"
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
     #define LOG(string)       Serial.print(string)
@@ -23,6 +23,7 @@
 #define BTN_DOWN     16726215
 #define BTN_IDLE     16712445
 #define BTN_VOL      16743045
+
 //               ---------------
 //              |     O   O     |
 //              |---------------|
@@ -105,7 +106,7 @@ public:
     void play(unsigned char trackIndex)
     {
         stop();
-        LOG("playing #");
+        LOG("Playing #");
         LOG_LINE(trackIndex);
         setMode(4);
         CmdSelect[4] = trackIndex;
@@ -210,10 +211,10 @@ void oscillate(int A[NB_SERVOS], int O[NB_SERVOS], int T, double phaseDiff[NB_SE
 {
     for (int i = 0; i < NB_SERVOS; i++)
     {
-        servo[i].SetO(O[i]);
-        servo[i].SetA(A[i]);
-        servo[i].SetT(T);
-        servo[i].SetPh(phaseDiff[i]);
+        servo[i].setO(O[i]);
+        servo[i].setA(A[i]);
+        servo[i].setT(T);
+        servo[i].setPh(phaseDiff[i]);
     }
     double ref = millis();
     for (double x = ref; x < T + ref; x = millis())
@@ -257,7 +258,7 @@ void moveNServos(int time, int newPosition[])
             {
                 for (int i = 0; i < NB_SERVOS; i++)
                 {
-                    servo[i].SetPosition(oldPosition[i] + (iteration * increment[i]));
+                    servo[i].setPosition(oldPosition[i] + (iteration * increment[i]));
                 }
                 iteration++;
                 oneTime++;
@@ -876,7 +877,7 @@ void dance3()
 
 void startDance(unsigned char danceIndex)
 {
-    LOG("dancing #");
+    LOG("Dancing #");
     LOG_LINE(danceIndex);
   
     servoAttach();
@@ -915,7 +916,7 @@ int getDistance()
     
     distance = (int)pulseIn(ECHO_PIN, HIGH) / 58;
 
-    LOG("distance: ");
+    LOG("Distance: ");
     LOG(distance);
 
     return distance;
@@ -938,11 +939,11 @@ void obstacleMode()
         LOG("\tst188ValueLeft: ");
         LOG(st188ValueLeft);
         LOG("\tst188ValueRight: ");
-        LOG(st188ValueRight);
+        LOG_LINE(st188ValueRight);
 
         if (st188ValueLeft >= 1000 && st188ValueRight >= 1000)
         {
-            LOG_LINE("\tGO BACKWARD 1");
+            LOG_LINE("GO BACKWARD 1");
             walk(3, DEFAULT_TEMPO * 4, false);
 
             if (turnRight == true)
@@ -956,13 +957,13 @@ void obstacleMode()
         }
         else if (st188ValueLeft >= 1000 && st188ValueRight < 1000)
         {
-            LOG_LINE("\tTURN RIGHT 2");
+            LOG_LINE("TURN RIGHT 2");
             turnRight = true;
             turn(3, DEFAULT_TEMPO * 4, true);
         }
         else if (st188ValueLeft < 1000 && st188ValueRight >= 1000)
         {
-            LOG_LINE("\tTURN LEFT 3");
+            LOG_LINE("TURN LEFT 3");
             turnRight = false;
             turn(3, DEFAULT_TEMPO * 4, false);
         }
@@ -970,7 +971,7 @@ void obstacleMode()
         {
             if (distance < 5)
             {
-                LOG_LINE("\tGO BACKWARD 4");
+                LOG_LINE("GO BACKWARD 4");
                 walk(3, DEFAULT_TEMPO * 4, false);
 
                 if (turnRight == true)
@@ -984,7 +985,7 @@ void obstacleMode()
             }
             else if (distance >= 5 && distance <= 20)
             {
-                LOG_LINE("\tTURN RIGHT 5");
+                LOG_LINE("TURN RIGHT 5");
 
                 if (turnRight == true)
                 {
@@ -997,14 +998,14 @@ void obstacleMode()
             }
             else
             {
-                LOG_LINE("\tGO FORWARD 6");
+                LOG_LINE("GO FORWARD 6");
                 walk(1, DEFAULT_TEMPO * 4, true);
             }
         }
     }
     else
     {
-        LOG_LINE("\tSTOP 7");
+        LOG_LINE("STOP 7");
         stop();
     }
 }
@@ -1024,40 +1025,40 @@ void followMode()
         LOG("\tst188ValueLeft: ");
         LOG(st188ValueLeft);
         LOG("\tst188ValueRight: ");
-        LOG(st188ValueRight);
+        LOG_LINE(st188ValueRight);
 
         if (st188ValueLeft >= 1000 && st188ValueRight >= 1000)
         {
-            LOG_LINE("\tGO FORWARD 1");
+            LOG_LINE("GO FORWARD 1");
             walk(1, DEFAULT_TEMPO * 4, true);
         }
         else if (st188ValueLeft >= 1000 && st188ValueRight < 1000)
         {
-            LOG_LINE("\tTURN LEFT 2");
+            LOG_LINE("TURN LEFT 2");
             turn(1, DEFAULT_TEMPO * 4, false);
         }
         else if (st188ValueLeft < 1000 && st188ValueRight >= 1000)
         {
-            LOG_LINE("\tTURN RIGHT 3");
+            LOG_LINE("TURN RIGHT 3");
             turn(1, DEFAULT_TEMPO * 4, true);
         }
         else if (st188ValueLeft < 1000 && st188ValueRight < 1000)
         {
             if (distance > 20)
             {
-                LOG_LINE("\tSTOP 4");
+                LOG_LINE("STOP 4");
                 stop();
             }
             else
             {
-                LOG_LINE("\tGO FORWARD 5");
+                LOG_LINE("GO FORWARD 5");
                 walk(1, DEFAULT_TEMPO * 4, true);
             }
         }
     }
     else
     {
-        LOG_LINE("\tSTOP 6");
+        LOG_LINE("STOP 6");
         stop();
     }
 }
@@ -1069,7 +1070,7 @@ void voltageMeasure()
         int    adcValue       = analogRead(VOLTAGE_MEASURE_PIN);
         double voltageMeasure = adcValue * VREF / 1024;
         double vcc            = voltageMeasure * (RES1 + RES2) / RES2;
-        LOG("vcc = ");
+        LOG("VCC = ");
         LOG(vcc);
         LOG_LINE(" V");
 
@@ -1153,10 +1154,6 @@ void setup()
     analogReference(INTERNAL);
 
     servoAttach();
-    servo[0].SetTrim(0);
-    servo[1].SetTrim(0);
-    servo[2].SetTrim(0);
-    servo[3].SetTrim(0);
     stop();
 
     delay(2000);
