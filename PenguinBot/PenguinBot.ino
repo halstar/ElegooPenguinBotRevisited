@@ -81,22 +81,22 @@ unsigned long  voltageMeasureTime = 0;
 enum MODE
 {
     IDLE,
-    IR_REMOTE,
-    OBSTACLE,
+    IR_CONTROL,
+    OBSTACLES_AVOIDANCE,
     FOLLOW,
     MUSIC,
     DANCE,
     VOLUME
 } mainMode = IDLE, oldMainMode = IDLE;
 
-enum IR_MODE
+enum DIRECTION
 {
     FORWARD,
     BACKWARD,
     TURN_RIGHT,
     TURN_LEFT,
     STOP,
-} irMode = STOP;
+} direction = STOP;
 
 class Mp3Player
 {
@@ -121,7 +121,7 @@ public:
 
         mp3Serial.write(CmdGetPlayStatus, 5);
         delay(10);
-        while (mp3Serial.available())
+        while (mp3Serial.available() != 0)
         {
             mp3Status += (char)mp3Serial.read();
         }
@@ -1110,7 +1110,7 @@ bool getIrValue(unsigned long *irValue)
 {
     decode_results results;
 
-    if (irRecv.decode(&results))
+    if (irRecv.decode(&results) != 0)
     {
         *irValue = results.value;
         irRecv.resume();
@@ -1177,30 +1177,30 @@ void loop()
         {
         case BTN_FORWARD:
             mp3Player.play(13);
-            mainMode = IR_REMOTE;
-            irMode   = FORWARD;
+            mainMode  = IR_CONTROL;
+            direction = FORWARD;
             break;
         case BTN_BACKWARD:
             mp3Player.play(14);
-            mainMode = IR_REMOTE;
-            irMode   = BACKWARD;
+            mainMode  = IR_CONTROL;
+            direction = BACKWARD;
             break;
         case BTN_LEFT:
             mp3Player.play(15);
-            mainMode = IR_REMOTE;
-            irMode   = TURN_LEFT;
+            mainMode  = IR_CONTROL;
+            direction = TURN_LEFT;
             break;
         case BTN_RIGHT:
             mp3Player.play(16);
-            mainMode = IR_REMOTE;
-            irMode   = TURN_RIGHT;
+            mainMode  = IR_CONTROL;
+            direction = TURN_RIGHT;
             break;
         case BTN_MODE:
             if (mainMode == FOLLOW)
             {
                 mp3Player.play(17);
                 delay(1000);
-                mainMode = OBSTACLE;
+                mainMode = OBSTACLES_AVOIDANCE;
             }
             else
             {
@@ -1299,7 +1299,7 @@ void loop()
         }
     }
 
-    if ((oldMainMode == IR_REMOTE || oldMainMode == OBSTACLE || oldMainMode == FOLLOW)
+    if ((oldMainMode == IR_CONTROL || oldMainMode == OBSTACLES_AVOIDANCE || oldMainMode == FOLLOW)
       && (mainMode != oldMainMode))
     {
         stop();
@@ -1309,8 +1309,8 @@ void loop()
 
     switch (mainMode)
     {
-    case IR_REMOTE:
-        switch (irMode)
+    case IR_CONTROL:
+        switch (direction)
         {
         case FORWARD:
             walk(1, DEFAULT_TEMPO * 4, true);
@@ -1328,7 +1328,7 @@ void loop()
             break;
         }
         break;
-    case OBSTACLE:
+    case OBSTACLES_AVOIDANCE:
         obstacleMode();
         break;
     case FOLLOW:
