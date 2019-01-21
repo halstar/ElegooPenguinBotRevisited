@@ -21,7 +21,7 @@
 #define BTN_MODE     16734885
 #define BTN_UP       16716015
 #define BTN_DOWN     16726215
-#define BTN_IDLE     16712445
+#define BTN_STOP     16712445
 #define BTN_VOL      16743045
 
 //               ---------------
@@ -80,14 +80,13 @@ unsigned long  voltageMeasureTime = 0;
 
 enum MODE
 {
-    IDLE,
     IR_CONTROL,
     OBSTACLES_AVOIDANCE,
     FOLLOW,
     MUSIC,
     DANCE,
     VOLUME
-} mainMode = IDLE, oldMainMode = IDLE;
+} mainMode = IR_CONTROL, oldMainMode = IR_CONTROL;
 
 enum DIRECTION
 {
@@ -115,7 +114,7 @@ public:
         delay(10);
     };
 
-    String getPlayStatus()
+    String getPlayStatus(void)
     {
         String mp3Status = "";
 
@@ -128,14 +127,14 @@ public:
         return mp3Status;
     }
 
-    void stop()
+    void stop(void)
     {
         setMode(4);
         mp3Serial.write(CmdStop, 5);
         delay(10);
     };
 
-    void setVolume()
+    void setVolume(void)
     {
         CmdVolumeSet[3] = volume;
         checkCode(CmdVolumeSet);
@@ -143,7 +142,7 @@ public:
         delay(10);
     };
 
-    void volumeUp()
+    void volumeUp(void)
     {
         volume++;
         if (volume >= 25)
@@ -154,7 +153,7 @@ public:
         delay(10);
     };
 
-    void volumeDown()
+    void volumeDown(void)
     {
         volume--;
         if (volume <= 0)
@@ -184,7 +183,7 @@ public:
         vs[i] = val;
     };
 
-    void init()
+    void init(void)
     {
         pinMode     (HT6871_PIN, OUTPUT);
         digitalWrite(HT6871_PIN, HIGH);
@@ -226,7 +225,7 @@ void oscillate(int A[NB_SERVOS], int O[NB_SERVOS], int T, double phaseDiff[NB_SE
     }
 }
 
-void defaultPosition()
+void defaultPosition(void)
 {
     int move[] = {90, 90, 90, 90};
     moveNServos(DEFAULT_TEMPO, move);
@@ -331,7 +330,7 @@ void turn(int steps, int T, bool isRight)
     servoDetach();
 }
 
-void stop()
+void stop(void)
 {
     servoAttach();
     defaultPosition();
@@ -721,7 +720,7 @@ void legRaise4(int tempo, bool isRight)
     defaultPosition();
 }
 
-void sitDown()
+void sitDown(void)
 {
     int move1[] = {150, 90, 90, 90};
     int move2[] = {150, 30, 90, 90};
@@ -771,7 +770,7 @@ void raiseFoot(bool isRight, int tempo)
     defaultPosition();
 }
 
-void shakeIt()
+void shakeIt(void)
 {
     double pause;
   
@@ -789,7 +788,7 @@ void shakeIt()
     defaultPosition();
 }
 
-void dance1()
+void dance1(void)
 {
     raiseFoot(true , DEFAULT_TEMPO);
     raiseFoot(false, DEFAULT_TEMPO);
@@ -816,7 +815,7 @@ void dance1()
     defaultPosition();
 }
 
-void dance2()
+void dance2(void)
 {
     sitDown();
 
@@ -842,7 +841,7 @@ void dance2()
     upDown(5, DEFAULT_TEMPO);
 }
 
-void dance3()
+void dance3(void)
 {
     flapping(1, DEFAULT_TEMPO);
     drunk(DEFAULT_TEMPO);
@@ -900,7 +899,7 @@ void startDance(unsigned char danceIndex)
     servoDetach();
 }
 
-int getDistance()
+int getDistance(void)
 {
     int distance;
 
@@ -922,7 +921,7 @@ int getDistance()
     return distance;
 }
 
-void obstacleMode()
+void doObstaclesAvoidance(void)
 {
     bool turnRight = true;
     int  distance;
@@ -1010,7 +1009,7 @@ void obstacleMode()
     }
 }
 
-void followMode()
+void doFollow(void)
 {
     int distance;
     int st188ValueLeft;
@@ -1063,7 +1062,31 @@ void followMode()
     }
 }
 
-void voltageMeasure()
+void doIrControl(void)
+{
+    switch (direction)
+    {
+    case FORWARD:
+        walk(1, DEFAULT_TEMPO * 4, true);
+        break;
+    case BACKWARD:
+        walk(1, DEFAULT_TEMPO * 4, false);
+        break;
+    case TURN_RIGHT:
+        turn(1, DEFAULT_TEMPO * 4, true);
+        break;
+    case TURN_LEFT:
+        turn(1, DEFAULT_TEMPO * 4, false);
+        break;
+    case STOP:
+        stop();
+        break;
+    default:
+        break;
+    }
+}
+
+void voltageMeasure(void)
 {
     if (millis() - voltageMeasureTime > 10000)
     {
@@ -1120,7 +1143,7 @@ bool getIrValue(unsigned long *irValue)
     return false;
 }
 
-void servoAttach()
+void servoAttach(void)
 {
     servo[0].attach(LOW_LEFT_PIN);
     servo[1].attach(LOW_RIGHT_PIN);
@@ -1128,7 +1151,7 @@ void servoAttach()
     servo[3].attach(UP_RIGHT_PIN);
 }
 
-void servoDetach()
+void servoDetach(void)
 {
     servo[0].detach();
     servo[1].detach();
@@ -1136,7 +1159,7 @@ void servoDetach()
     servo[3].detach();
 }
 
-void setup()
+void setup(void)
 {
     Serial.begin   (9600);
     mp3Serial.begin(9600);
@@ -1165,7 +1188,7 @@ void setup()
     stop();
 }
 
-void loop()
+void loop(void)
 {
     unsigned long irValue;
    
@@ -1195,6 +1218,12 @@ void loop()
             mainMode  = IR_CONTROL;
             direction = TURN_RIGHT;
             break;
+        case BTN_STOP:
+            mp3Player.play(10);
+            delay(1000);
+            mainMode  = IR_CONTROL;
+            direction = STOP;
+            break;
         case BTN_MODE:
             if (mainMode == FOLLOW)
             {
@@ -1208,11 +1237,6 @@ void loop()
                 delay(1000);
                 mainMode = FOLLOW;
             }
-            break;
-        case BTN_IDLE:
-            mp3Player.play(10);
-            delay(1000);
-            mainMode = IDLE;
             break;
         case BTN_MUSIC:
             mp3Player.play(11);
@@ -1299,8 +1323,8 @@ void loop()
         }
     }
 
-    if ((oldMainMode == IR_CONTROL || oldMainMode == OBSTACLES_AVOIDANCE || oldMainMode == FOLLOW)
-      && (mainMode != oldMainMode))
+    if ((mainMode != oldMainMode)
+     && (oldMainMode == IR_CONTROL || oldMainMode == OBSTACLES_AVOIDANCE || oldMainMode == FOLLOW))
     {
         stop();
     }
@@ -1310,36 +1334,18 @@ void loop()
     switch (mainMode)
     {
     case IR_CONTROL:
-        switch (direction)
-        {
-        case FORWARD:
-            walk(1, DEFAULT_TEMPO * 4, true);
-            break;
-        case BACKWARD:
-            walk(1, DEFAULT_TEMPO * 4, false);
-            break;
-        case TURN_RIGHT:
-            turn(1, DEFAULT_TEMPO * 4, true);
-            break;
-        case TURN_LEFT:
-            turn(1, DEFAULT_TEMPO * 4, false);
-            break;
-        default:
-            break;
-        }
+        doIrControl();
         break;
     case OBSTACLES_AVOIDANCE:
-        obstacleMode();
+        doObstaclesAvoidance();
         break;
     case FOLLOW:
-        followMode();
+        doFollow();
         break;
     case MUSIC:
     case DANCE:
-    case IDLE:
     case VOLUME:
     default:
-        delay(10);
         break;
     }
 }
